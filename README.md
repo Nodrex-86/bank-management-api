@@ -5,6 +5,8 @@ A modular Python-based banking system demonstrating Object-Oriented Programming 
 - **OOP Core:** Robust class hierarchy for account management.
 - **Account Types:** Specialized logic for Savings and Current accounts.
 - **Validation:** Strict data handling using Python decorators.
+- **Persistence:** Automated data handling using **JSON** for reliable storage between sessions.
+
 
 
 
@@ -29,3 +31,24 @@ Simply run the provided batch script:
 **generate_docs.bat**
 
 The output will be generated in the ./dokumentation folder.
+
+---
+
+## 📂 Project Structure
+
+```text
+Bank-Management-API/
+├── tests/              # Automated Test Suites
+│   ├── __init__.py
+│   ├── test_banken.py
+│   └── test_konto.py
+├── main.py             # Logic controller
+├── konto.py            # Base class with core validation logic
+├── girokonto.py        # Specialized account type (Inheritance)
+├── sparkonto.py        # Specialized account type (Inheritance)
+└── konten.json         # JSON-based data storage (Persistence)
+```
+
+
+---
+*Developed as a showcase for Python Backend Development, OOP
