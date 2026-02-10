@@ -49,6 +49,25 @@ class Sparkonto(Konto):
         self.kontostand *= factor
         return f"{self.zins}% Zinsen hinzugefügt. Neuer Stand: {self.kontostand:.2f} EUR"
 
+    def zinsen_berechnen_mit(self, neuer_zins):
+        """
+        Berechnet die Zinsen temporär mit einem abweichenden Zinssatz.
+
+        Args:
+            neuer_zins (float): Temporärer Zinssatz in Prozent.
+
+        Returns:
+            str: Bestätigung der Berechnung mit dem neuen Zinssatz.
+        """
+        alter_zins = self.zins  # Speichert den ursprünglichen Zins zwischen
+        try:
+            self.zins = neuer_zins  # Validierung erfolgt automatisch durch den Setter
+            # Wir fangen den Rückgabestring der Methode ab
+            result_msg = self.zinsen_berechnen()
+            return f"Berechnung mit Sonderzins ({neuer_zins}%): {result_msg}"
+        finally:
+            self.zins = alter_zins  # Stellt den Original-Zins sicher wieder her
+
     def __str__(self):
         """Benutzerfreundliche Darstellung des Sparkontos."""
         return f"Sparkonto: {self.inhaber} | Saldo: {self.kontostand:.2f} EUR | Zins: {self.zins:.2f}%"

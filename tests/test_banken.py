@@ -70,5 +70,11 @@ class TestSparkonto(unittest.TestCase):
         self.spar.zinsen_berechnen()
         self.assertEqual(self.spar.kontostand, 1020.0)
 
+    def test_sonderzins_temporaer(self):
+        """Prüft, ob der Zins nach zinsen_berechnen_mit wieder zurückgesetzt wird."""
+        original_zins = self.spar.zins
+        self.spar.zinsen_berechnen_mit(5.0)
+        self.assertEqual(self.spar.zins, original_zins)
+
 if __name__ == "__main__":
     unittest.main()

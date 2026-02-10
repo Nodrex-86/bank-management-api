@@ -90,8 +90,18 @@ def zinsen_berechnung(konten_liste, name):
     else:
         print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
 
+def sonderzins_simulation(konten_liste, name, sonderzins):
+    """Demonstriert die Berechnung mit einem temporären Sonderzinssatz."""
+    k = finde_konto(konten_liste, name)
+    if k and hasattr(k, 'zinsen_berechnen_mit'):
+        print(f"✅ Erfolg! {k.zinsen_berechnen_mit(sonderzins)}")
+    else:
+        print(f"⚠️ Sonderzins für '{name}' nicht verfügbar.")
+
+
 if __name__ == "__main__":
     einzahlung_simulation(konten, "Tom", 100)
     abhebung_simulation(konten, "Jim", 100)
     zinsen_berechnung(konten, "Tom")
     zinsen_berechnung(konten, "Jim")
+    sonderzins_simulation(konten, "Jim", 5)
