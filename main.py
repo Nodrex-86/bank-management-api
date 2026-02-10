@@ -1,7 +1,7 @@
 """
 bank-management-api
 Hauptmodul zur Verwaltung und Automatisierung von Bankkonten.
-Nutzung von JSON-Persistenz.
+Nutzung von JSON-Persistenz und interaktivem Menü.
 """
 import os
 import json
@@ -14,7 +14,13 @@ DB_FILE = "konten.json"
 # --- PERSISTENZ (JSON) ---
 
 def speichere_konten_json(konten_liste, dateiname=DB_FILE):
-    """Speichert die Konten-Liste als strukturierte JSON-Datei."""
+    """
+    Speichert die Konten-Liste als strukturierte JSON-Datei.
+
+    Args:
+        konten_liste (list): Liste der Konto-Objekte.
+        dateiname (str): Name der Zieldatei.
+    """
     daten = []
     for k in konten_liste:
         # Erstellung eines Dictionaries für die JSON-Struktur
@@ -34,7 +40,15 @@ def speichere_konten_json(konten_liste, dateiname=DB_FILE):
         print(f"❌ FEHLER beim Speichern: {e}")
 
 def lade_konten_json(dateiname=DB_FILE):
-    """Lädt Konten aus einer JSON-Datei und erstellt die entsprechenden Objekte."""
+    """
+    Lädt Konten aus einer JSON-Datei und erstellt die entsprechenden Objekte.
+
+    Args:
+        dateiname (str): Name der Quelldatei.
+
+    Returns:
+        list: Eine Liste mit instanziierten Girokonto- und Sparkonto-Objekten.
+    """
     geladene_konten = []
     if not os.path.exists(dateiname):
         print(f"✅ INFO: Keine Bestandsdatei '{dateiname}' gefunden. Starte leer.")
@@ -56,6 +70,7 @@ def lade_konten_json(dateiname=DB_FILE):
     return geladene_konten
 
 # --- LOGIK & MENÜ ---
+
 def finde_konto(konten_liste, name):
     """
     Sucht ein Konto in der Liste basierend auf dem Inhabernamen.
@@ -72,79 +87,107 @@ def finde_konto(konten_liste, name):
     """
     return next((k for k in konten_liste if k.inhaber.lower() == name.strip().lower()), None)
 
-def einzahlung_simulation(konten_liste, name, betrag):
-    """
-    Simuliert eine Einzahlung basierend auf dem Namen, unabhängig vom Kontotyp.
+def interaktives_menue(konten_liste):
+    """Startet die Benutzerschnittstelle für die Kontoverwaltung."""
+    while True:
+        print("\n--- 🏦 BANK-MANAGEMENT-SYSTEM (JSON) ---")
+        print("1. Kontenübersicht anzeigen")
+        print("2. Einzahlen")
+        print("3. Abheben")
+        print("4. Neues Konto erstellen")
+        print("5. Zinsen gutschreiben (Kontostand ändert sich)") 
+        print("6. Zinsen simulieren (Nur Testrechnung)")
+        print("7. Speichern & Beenden")
 
-    Args:
-        konten_liste (list): Die Liste der verfügbaren Konten.
-        name (str): Kundenname.
-        betrag (float): Betrag für die Einzahlung.
-    """
-    k = finde_konto(konten_liste, name)
-    if k:
-        try:
-            alte_kontostand = k.kontostand
-            k.einzahlen(betrag)
-            print(f"✅ Erfolg! Alter Stand: {alte_kontostand} -> Neuer Stand: {k.kontostand:.2f} EUR")
-            speichere_konten_json(konten_liste)
-        except Exception as e:
-            print(f"⚠️ Fehler: {e}")
-    else:
-        print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
+        wahl = input("\nWählen Sie eine Option (1-7): ")
 
-def abhebung_simulation(konten_liste, name, betrag):
-    """
-    Simuliert eine Abhebung basierend auf dem Namen, unabhängig vom Kontotyp.
-
-    Args:
-        konten_liste (list): Die Liste der verfügbaren Konten.
-        name (str): Name des Kunden.
-        betrag (float): Betrag für die Abhebung.
-    """
-    k = finde_konto(konten_liste, name)
-    if k:
-        try:
-            alte_kontostand = k.kontostand
-            k.abheben(betrag)
-            print(f"✅ Erfolg! Alter Stand: {alte_kontostand} -> Neuer Stand: {k.kontostand:.2f} EUR")
-            speichere_konten_json(konten_liste)
-        except Exception as e:
-            print(f"⚠️ Fehler: {e}")
-    else:
-        print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
-
-def zinsen_berechnung(konten_liste, name):
-    """
-    Berechnet den neuen Kontostand anhand des vordefinierten Zinssatzes.
-
-    Args:
-        konten_liste (list): Die Liste der verfügbaren Konten.
-        name (str): Name des Kunden.
-    """
-    k = finde_konto(konten_liste, name)
-    if k:
-        try:
-            alte_kontostand = k.kontostand
-            if hasattr(k, 'zinsen_berechnen'):
-                k.zinsen_berechnen()
-                print(f"✅ Erfolg! Alter Stand: {alte_kontostand} -> Neuer Stand: {k.kontostand:.2f} EUR")
-                speichere_konten_json(konten_liste)
+        if wahl == "1":
+            if not konten_liste:
+                print("\nKeine Konten vorhanden.")
             else:
-                print(f"⚠️  Achtung: Konto '{name}' hat kein Sparkonto.")
-        except Exception as e:
-            print(f"⚠️ Fehler: {e}")
-    else:
-        print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
+                print("\nAktuelle Konten:")
+                for k in konten_liste:
+                    print(k)
+        
+        elif wahl == "2":
+            name = input("Name des Inhabers: ")
+            k = finde_konto(konten_liste, name)
+            if k:
+                try:
+                    betrag = float(input(f"Betrag für {k.inhaber} einzahlen: "))               
+                    print(f"✅  {k.einzahlen(betrag)}")
+                except Exception as e:
+                    print(f"⚠️ Fehler: {e}")
+            else:
+                print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
 
-def sonderzins_simulation(konten_liste, name, sonderzins):
-    """Demonstriert die Berechnung mit einem temporären Sonderzinssatz."""
-    k = finde_konto(konten_liste, name)
-    if k and hasattr(k, 'zinsen_berechnen_mit'):
-        print(f"✅ Erfolg! {k.zinsen_berechnen_mit(sonderzins)}")
-        speichere_konten_json(konten_liste)
-    else:
-        print(f"⚠️ Sonderzins für '{name}' nicht verfügbar.")
+        elif wahl == "3":
+            name = input("Name des Inhabers: ")
+            k = finde_konto(konten_liste, name)
+            if k:
+                try:
+                    betrag = float(input(f"Betrag von {k.inhaber} abheben: "))
+                    print(f"✅ {k.abheben(betrag)}")
+                except Exception as e:
+                    print(f"⚠️ Fehler: {e}")
+            else:
+                print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
+
+        elif wahl == "4":
+            name = input("Name des Inhabers: ")
+            typ = input("Typ (Giro / Spar): ").strip().lower()
+            try:
+                start_saldo = float(input("Startguthaben: "))
+                if typ == "giro":
+                    dispo = float(input("Dispo-Limit: "))
+                    neues_k = Girokonto(name, start_saldo, dispo)
+                elif typ == "spar":
+                    zins = float(input("Zinssatz (%): "))
+                    neues_k = Sparkonto(name, start_saldo, zins)
+                else:
+                    print("❌ Fehler: Ungültiger Kontotyp! Bitte 'Giro' oder 'Spar' eingeben.")
+                    continue # Springt zurück zum Menüanfang
+                
+                konten_liste.append(neues_k)
+                print(f"✅ Konto für {name} erfolgreich angelegt!")
+            except Exception as e:
+                print(f"⚠️ Fehler beim Erstellen: {e}")
+
+        elif wahl == "5":
+            name = input("Name des Inhabers für Zinsgutschrift: ")
+            k = finde_konto(konten_liste, name)
+            if k:
+                try:
+                    if hasattr(k, 'zinsen_berechnen'):                    
+                        print(f"✅ {k.zinsen_berechnen()}")
+                    else:
+                        print(f"⚠️  Achtung: Konto '{name}' ist kein Sparkonto.")
+                except Exception as e:
+                    print(f"⚠️ Fehler: {e}")
+            else:
+                print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
+
+        elif wahl == "6":
+            name = input("Name des Inhabers: ")
+            k = finde_konto(konten_liste, name)
+            if k:
+                try:
+                    if hasattr(k, 'zinsen_berechnen_mit'):
+                        zins = float(input("Geben Sie den Zinssatz für die Berechnung ein: "))
+                        print(f"✅ {k.zinsen_berechnen_mit(zins)}")
+                    else:
+                        print(f"⚠️ Sonderzins für '{name}' nicht verfügbar.")
+                except Exception as e:
+                    print(f"⚠️ Fehler: {e}")
+            else:
+                print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
+
+        elif wahl == "7":
+            speichere_konten_json(konten_liste)
+            print("✅ Daten gespeichert. Auf Wiedersehen!")
+            break
+        else:
+            print("⚠️ Ungültige Eingabe, bitte versuchen Sie es erneut.")
 
 
 # --- HAUPTPROGRAMM ---
@@ -156,10 +199,6 @@ if __name__ == "__main__":
         print("INFO: Keine Daten gefunden. Erstelle Standard-Konten...")
         konten.append(Girokonto("Tom", 500, 200))
         konten.append(Sparkonto("Jim", 1000, 2))
-        # Optional: Sofort speichern, damit die Datei existiert
         speichere_konten_json(konten)
-    einzahlung_simulation(konten, "Tom", 100)
-    abhebung_simulation(konten, "Jim", 100)
-    zinsen_berechnung(konten, "Tom")
-    zinsen_berechnung(konten, "Jim")
-    sonderzins_simulation(konten, "Jim", 5)
+
+    interaktives_menue(konten)

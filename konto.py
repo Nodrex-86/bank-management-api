@@ -18,26 +18,26 @@ class Konto:
         return self._kontostand
     
     @kontostand.setter
-    def kontostand(self, value):
+    def kontostand(self, betrag):
         """
         Validiert den Betrag, bevor er im Kontostand gespeichert wird.
 
         Args:
-            value (float): Der zu setzende Kontostand.
+            betrag (float): Der zu setzende Kontostand.
 
         Raises:
             TypeError: Wenn der Wert keine Zahl ist.
             ValueError: Wenn der Wert negativ ist.
         """
         try:
-            value = float(value)
+            betrag = float(betrag)
         except (ValueError, TypeError):
             raise TypeError("Konto: Der Betrag muss eine Zahl sein!")
         
-        if value < 0:
+        if betrag < 0:
             raise ValueError("Konto: Der Kontostand darf nicht negativ sein.")
-        self._get_private_stand = value # Interner Speicherwert
-        self._kontostand = value
+        self._get_private_stand = betrag # Interner Speicherwert
+        self._kontostand = betrag
 
     def einzahlen(self, betrag):
         """
@@ -58,6 +58,7 @@ class Konto:
         if betrag <= 0:
             raise ValueError("Konto (einzahlen): Der Betrag muss größer als 0 sein.")
         self.kontostand += betrag
+        return f"{betrag:.2f} EUR eingezahlt. Neuer Stand: {self.kontostand:.2f} EUR"
 
     def abheben(self, betrag):
         """
@@ -80,6 +81,7 @@ class Konto:
         if betrag > self.kontostand:
             raise ValueError("Konto (abheben): Betrag übersteigt den Kontostand.")
         self.kontostand -= betrag
+        return f"{betrag:.2f} EUR abgehoben. Neuer Stand: {self.kontostand:.2f} EUR"
 
     def __str__(self):
         """Gibt eine benutzerfreundliche Zusammenfassung des Kontos zurück."""
