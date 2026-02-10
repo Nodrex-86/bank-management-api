@@ -1,5 +1,5 @@
 # 🏦 Bank-Management API
-A modular Python-based banking system demonstrating Object-Oriented Programming (OOP) principles.
+A modular Python-based banking system featuring Object-Oriented Programming (OOP), automated testing, and interactive Menu
 
 ## 🌟 Current Features
 - **OOP Core:** Robust class hierarchy for account management.
@@ -8,7 +8,20 @@ A modular Python-based banking system demonstrating Object-Oriented Programming 
 - **Persistence:** Automated data handling using **JSON** for reliable storage between sessions.
 
 
+## 🚀 Quick Start
 
+### 1. Prerequisites
+Ensure you have Python 3.10+ installed.
+
+### 3. Run the Application
+Interactive CLI :
+
+**Interactive Menu (CLI):**
+```bash
+python main.py
+```
+
+---
 
 ## 🧪 Testing
 The project follows a modular structure where business logic and test suites are strictly separated. 
