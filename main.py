@@ -90,8 +90,8 @@ def zinsen_berechnung(konten_liste, name):
     else:
         print(f"❌ Fehler: Konto für '{name}' nicht gefunden.")
 
-
-einzahlung_simulation(konten, "Tom", 100)
-abhebung_simulation(konten, "Jim", 100)
-zinsen_berechnung(konten, "Tom")
-zinsen_berechnung(konten, "Jim")
+if __name__ == "__main__":
+    einzahlung_simulation(konten, "Tom", 100)
+    abhebung_simulation(konten, "Jim", 100)
+    zinsen_berechnung(konten, "Tom")
+    zinsen_berechnung(konten, "Jim")
