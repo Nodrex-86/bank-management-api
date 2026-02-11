@@ -33,13 +33,13 @@ class TestBankAPI(unittest.TestCase):
         """
         response = self.client.post("/transaktion/einzahlen/Tom?betrag=100")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("erfolgreich", response.json()["nachricht"].lower())
+        self.assertIn("eingezahlt", response.json()["nachricht"].lower())
 
     def test_abheben_error(self):
         """
         Testet Fehler bei zu hohen Betrag
         """
-        response = self.client.post("/transaktionen/abheben/Tom?betrag=100000")
+        response = self.client.post("/transaktion/abheben/Tom?betrag=100000")
         self.assertEqual(response.status_code, 400)
 
     
@@ -84,9 +84,9 @@ class TestBankAPI(unittest.TestCase):
         """
         Testet, ob auf Sparkonto Zinsen richtig gutgeschrieben wird
         """
-        response = self.client.post("/zinsen/gutscheiben(Jim)")
+        response = self.client.post("/zinsen/gutschreiben/Jim")
         if response.status_code == 200:
-            self.assertIn("Simulation", response.json()["status"])
+            self.assertIn("Erfolg", response.json()["status"])
         else:
             self.assertEqual(response.status_code, 400)
     
