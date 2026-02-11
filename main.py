@@ -79,6 +79,7 @@ def initialisiere_standard_konten():
 
 # --- LOGIK & MENÜ ---
 
+
 def finde_konto(konten_liste, name):
     """
     Sucht ein Konto in der Liste basierend auf dem Inhabernamen.
@@ -103,6 +104,21 @@ def finde_konto(konten_liste, name):
     
     return konto
 
+def filtere_konten(konten_liste, suchbegriff):
+    """
+    Sucht alle Konten, die den Suchbegriff im Namen enthalten.
+    Gibt eine Liste der Treffer zurück.
+
+    Args:
+        konten_liste (list): Eine Liste von Konto-Objekten.
+        suchbegriff (str): Der Name des gesuchten Kontoinhabers.
+
+    Returns:
+        Gibt die Liste der Treffer zurück.
+    """
+    begriff_bereinigt = suchbegriff.strip().lower()
+    return [k for k in konten_liste if begriff_bereinigt in k.inhaber.lower()]
+
 def interaktives_menue(konten_liste):
     """Startet die Benutzerschnittstelle für die Kontoverwaltung."""
     while True:
@@ -110,12 +126,13 @@ def interaktives_menue(konten_liste):
         print("1. Kontenübersicht anzeigen")
         print("2. Einzahlen")
         print("3. Abheben")
-        print("4. Neues Konto erstellen")
-        print("5. Zinsen gutschreiben (Kontostand ändert sich)") 
-        print("6. Zinsen simulieren (Nur Testrechnung)")
-        print("7. Speichern & Beenden")
+        print("4. Konto suchen") 
+        print("5. Neues Konto erstellen")
+        print("6. Zinsen gutschreiben (Kontostand ändert sich)") 
+        print("7. Zinsen simulieren (Nur Testrechnung)")
+        print("8. Speichern & Beenden")
 
-        wahl = input("\nWählen Sie eine Option (1-7): ")
+        wahl = input("\nWählen Sie eine Option (1-8): ")
 
         if wahl == "1":
             if not konten_liste:
@@ -135,16 +152,16 @@ def interaktives_menue(konten_liste):
                     k = finde_konto(konten_liste, name)
                     break
                 except ValueError:
-                    print(f"⚠️ Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
+                    print(f"⚠️  Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
             if k:
                 try:
                     k = finde_konto(konten_liste, name)
                     betrag = float(input(f"Betrag für {k.inhaber} einzahlen: "))               
                     print(f"✅  {k.einzahlen(betrag)}")
                 except ValueError as e:
-                    print(f"❌ {e}")
+                    print(f"❌  {e}")
                 except Exception as e:
-                    print(f"⚠️ Unerwarteter Fehler: {e}")
+                    print(f"⚠️  Unerwarteter Fehler: {e}")
 
         elif wahl == "3":
             k = None
@@ -156,24 +173,35 @@ def interaktives_menue(konten_liste):
                     k = finde_konto(konten_liste, name)
                     break
                 except ValueError:
-                    print(f"⚠️ Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
+                    print(f"⚠️  Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
             if k:
                 try:
                     betrag = float(input(f"Betrag von {k.inhaber} abheben: "))
-                    print(f"✅ {k.abheben(betrag)}")
+                    print(f"✅  {k.abheben(betrag)}")
                 except ValueError as e:
-                    print(f"❌ {e}")
+                    print(f"❌  {e}")
                 except Exception as e:
-                    print(f"⚠️ Unerwarteter Fehler: {e}")
-
+                    print(f"⚠️  Unerwarteter Fehler: {e}")
+        
         elif wahl == "4":
+            begriff = input("\n🔍 Filtern nach Name: ")
+            treffer = filtere_konten(konten, begriff) # Logik aufrufen
+            
+            if not treffer:
+                print(f"⚠️  Keine Konten gefunden für: '{begriff}'")
+            else:
+                print(f"\n✅  {len(treffer)} Treffer gefunden:")
+                for k in treffer:
+                    print(k)
+
+        elif wahl == "5":
             name = input("Name des Inhabers: ")
 
             while True:
                 typ = input("Typ (Giro / Spar): ").strip().lower()
                 if typ in ["giro", "spar"]:
                     break  # Korrekte Eingabe, Schleife verlassen
-                print("❌ Fehler: Bitte nur 'Giro' oder 'Spar' eingeben.")
+                print("❌  Fehler: Bitte nur 'Giro' oder 'Spar' eingeben.")
             try:
                 start_saldo = float(input("Startguthaben: "))
                 if typ == "giro":
@@ -184,14 +212,14 @@ def interaktives_menue(konten_liste):
                     neues_k = Sparkonto(name, start_saldo, zins)
                 
                 konten_liste.append(neues_k)
-                print(f"✅ Konto für {name} erfolgreich angelegt!")
+                print(f"✅  Konto für {name} erfolgreich angelegt!")
             except ValueError as e:
                 # Fängt sowohl falsche Zahlen als auch den ungültigen Typ ab
-                print(f"❌ Eingabefehler: {e}")
+                print(f"❌  Eingabefehler: {e}")
             except Exception as e:
-                print(f"⚠️ Unerwarteter Fehler: {e}")
+                print(f"⚠️  Unerwarteter Fehler: {e}")
 
-        elif wahl == "5":
+        elif wahl == "6":
             k = None
             while True:
                 name = input("Name des Inhabers für Zinsgutschrift: ")
@@ -201,20 +229,20 @@ def interaktives_menue(konten_liste):
                     k = finde_konto(konten_liste, name)
                     break
                 except ValueError:
-                    print(f"⚠️ Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
+                    print(f"⚠️  Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
             if k:
                 try:
                     k = finde_konto(konten_liste, name)
                     if hasattr(k, 'zinsen_berechnen'):                    
-                        print(f"✅ {k.zinsen_berechnen()}")
+                        print(f"✅  {k.zinsen_berechnen()}")
                     else:
-                        print(f"⚠️  Achtung: Konto '{name}' ist kein Sparkonto.")
+                        print(f"⚠️   Achtung: Konto '{name}' ist kein Sparkonto.")
                 except ValueError as e:
-                    print(f"❌ {e}")
+                    print(f"❌  {e}")
                 except Exception as e:
-                    print(f"⚠️ Unerwarteter Fehler: {e}")
+                    print(f"⚠️  Unerwarteter Fehler: {e}")
 
-        elif wahl == "6":
+        elif wahl == "7":
             k = None
             while True:
                 name = input("Name des Inhabers: ")
@@ -224,7 +252,7 @@ def interaktives_menue(konten_liste):
                     k = finde_konto(konten_liste, name)
                     break
                 except ValueError:
-                    print(f"⚠️ Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
+                    print(f"⚠️  Konto für '{name}' nicht gefunden. Bitte versuchen Sie es erneut(oder 'x' zum Abbrechen).")
             if k:
                 try:
                     k = finde_konto(konten_liste, name)
@@ -232,21 +260,21 @@ def interaktives_menue(konten_liste):
                         zins = float(input("Geben Sie den Zinssatz für die Berechnung ein: "))
                         print(f"✅ {k.zinsen_berechnen_mit(zins)}")
                     else:
-                        print(f"⚠️ Sonderzins für '{name}' nicht verfügbar.")
+                        print(f"⚠️  Sonderzins für '{name}' nicht verfügbar.")
                 except ValueError as e:
                     print(f"❌ {e}")
                 except Exception as e:
-                    print(f"⚠️ Unerwarteter Fehler: {e}")
+                    print(f"⚠️  Unerwarteter Fehler: {e}")
 
-        elif wahl == "7":
+        elif wahl == "8":
             try:
                 speichere_konten_json(konten_liste)
-                print(f"✅ Daten erfolgreich in '{DB_FILE}' gesichert. Auf Wiedersehen!")
+                print(f"✅  Daten erfolgreich in '{DB_FILE}' gesichert. Auf Wiedersehen!")
             except Exception as e:
-                print(f"❌ Kritischer Fehler beim Beenden: {e}")
+                print(f"❌  Kritischer Fehler beim Beenden: {e}")
             break
         else:
-            print("⚠️ Ungültige Eingabe, bitte versuchen Sie es erneut.")
+            print("⚠️  Ungültige Eingabe, bitte versuchen Sie es erneut.")
 
 
 # --- HAUPTPROGRAMM ---
