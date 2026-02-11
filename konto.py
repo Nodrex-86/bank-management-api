@@ -39,6 +39,14 @@ class Konto:
         self._get_private_stand = betrag # Interner Speicherwert
         self._kontostand = betrag
 
+    def to_dict(self):
+        """Wandelt das Objekt dynamisch in ein Dictionary um."""
+        # vars(self) holt alle Instanz-Variablen (inhaber, kontostand, etc.)
+        data = vars(self).copy()
+        # Klassennamen (Girokonto/Sparkonto) hinzufügen
+        data["typ"] = self.__class__.__name__
+        return data
+    
     def einzahlen(self, betrag):
         """
         Erhöht den Kontostand um einen positiven Betrag.
