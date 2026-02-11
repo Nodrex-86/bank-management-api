@@ -13,7 +13,7 @@ A modular Python-based banking system featuring Object-Oriented Programming (OOP
 ### 1. Prerequisites
 Ensure you have Python 3.10+ installed.
 
-### 3. Run the Application
+### 2. Run the Application
 Interactive CLI :
 
 **Interactive Menu (CLI):**
@@ -21,6 +21,13 @@ Interactive CLI :
 python main.py
 ```
 
+### 🌐 REST API (FastAPI)
+The system offers a complete REST interface that maps all the functions of the CLI menu.
+
+**Server starten:**
+```bash
+uvicorn api:app --reload
+```
 ---
 
 ## 🧪 Testing
