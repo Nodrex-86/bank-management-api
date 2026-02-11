@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from typing import List
-from main import lade_konten_json, speichere_konten_json, finde_konto
+from main import lade_konten_json, speichere_konten_json, finde_konto, filtere_konten
 from sparkonto import Sparkonto
 from girokonto import Girokonto
 
@@ -112,6 +112,26 @@ def abheben_api(
         raise HTTPException(status_code=400, detail=f"⚠️ {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail="❌ Interner Serverfehler")
+    
+
+@app.get("/suche", tags=["3. Verwaltung"])
+def api_suchen(name: str):
+    """
+    Sucht alle Konten, die den Suchbegriff im Namen enthalten.
+    Gibt eine Liste der Treffer zurück.
+
+    Args:
+        name (str): Der Name des gesuchten Kontoinhabers.
+
+    Returns:
+        treffer: Gibt die Liste der Treffer zurück.
+    """
+    konten = lade_konten_json()
+    treffer = filtere_konten(konten, name)
+    if not treffer:
+        return {"nachricht": "Keine Treffer", "ergebnisse": []}
+    return treffer
+
 
 @app.post("/konten/erstellen", tags=["3. Verwaltung"])
 def konto_erstellen(daten: KontoErstellenSchema):
