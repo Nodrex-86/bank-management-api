@@ -49,12 +49,17 @@ Once started, access the **Interactive API Documentation (Swagger)** at:
 👉 [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## 🧪 Testing
-The project follows a modular structure where business logic and test suites are strictly separated. 
+The project follows a modular structure where business logic and test suites are strictly separated. Automated tests ensure the reliability of both account logic and API endpoints.
 
-**Run the automated test suite from the root directory:**
+**Prerequisites:**
+- **API testing requires** `httpx` (included in `requirements.txt`).
+- **Note:** The database (`konten.json`) is automatically initialized with default data if it is missing during the test run.
+### Run all tests (Logic & API) from the root directory:
 ```bash
 python -m unittest discover -s tests
 ```
+
+---
 
 ## 🐳 Docker Deployment
 Build and run the containerized application locally:
