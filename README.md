@@ -1,4 +1,4 @@
-# 🏦 Bank-Management API
+# 🏦 Bank-Management API ![Python CI](https://github.com/Nodrex-86/bank-management-api/actions/workflows/python-app.yml/badge.svg)
 
 A modular Python-based banking system featuring Object-Oriented Programming (OOP), automated testing, and a modern REST API interface.
 
