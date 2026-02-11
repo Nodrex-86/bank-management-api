@@ -2,11 +2,18 @@
 
 A modular Python-based banking system featuring Object-Oriented Programming (OOP), automated testing, and a modern REST API interface.
 
+## 🌐 Live Demo & Cloud Infrastructure
+The application is containerized and automatically deployed to the cloud using a custom CI/CD pipeline.
+
+- **Live API Documentation:** 👉 [Interactive Swagger UI (Azure)](https://nodrex-management-api-ddhqgfgtg6b4c7hm.westeurope-01.azurewebsites.net/docs)
+- **Deployment Status:** [![Build and Deploy FastAPI to Azure](https://github.com/Nodrex-86/bank-management-api/actions/workflows/main.yml/badge.svg)](https://github.com/Nodrex-86/bank-management-api/actions/workflows/main.yml)
+
 ### 🛠️ Tech Stack (Cloud)
+- **Cloud Provider:** Microsoft Azure (App Services)
 - **Container Registry:** GitHub Container Registry (GHCR)
 - **CI/CD Pipeline:** GitHub Actions (Automated Docker Build & Push)
+- **Security:** Azure Service Principals (RBAC)
 
-## 🌟 Current Features
 ## 🌟 Key Features
 - **OOP Core:** Robust class hierarchy (Inheritance) with strict data validation using Python Decorators (@property/@setter).
 - **REST API:** Modern web interface built with **FastAPI** and asynchronous support.
@@ -65,9 +72,9 @@ pdoc ./[filename].py -o ./dokumentation
 ```
 **To generate the latest documentation (Windows):**
 Simply run the provided batch script:
-
-**generate_docs.bat**
-
+```bash
+generate_docs.bat
+```
 The output will be generated in the ./dokumentation folder.
 
 ---
@@ -76,6 +83,8 @@ The output will be generated in the ./dokumentation folder.
 
 ```text
 Bank-Management-API/
+├── .github/workflows/  # CI/CD Pipeline Definitions
+    ├── main.yml
 ├── tests/              # Automated Test Suites
 │   ├── __init__.py
 │   ├── test_banken.py
