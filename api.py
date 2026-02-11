@@ -1,9 +1,20 @@
 from fastapi import FastAPI, HTTPException, Query
+import os
 from pydantic import BaseModel
 from typing import List
 from main import lade_konten_json, speichere_konten_json, finde_konto, filtere_konten
 from sparkonto import Sparkonto
 from girokonto import Girokonto
+
+def stelle_datenbank_sicher():
+    """Prüft, ob die JSON-Datei existiert, falls nicht -> Erstellen."""
+    if not os.path.exists("konten.json"):
+        from main import initialisiere_standard_konten, speichere_konten_json
+        print("☁️ CI/CD oder Erststart erkannt: Erstelle temporäre Datenbank...")
+        standard_konten = initialisiere_standard_konten()
+        speichere_konten_json(standard_konten)
+
+stelle_datenbank_sicher()
 
 app = FastAPI(
     title="🏦 Nodrex Bank-Management API",
