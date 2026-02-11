@@ -1,34 +1,45 @@
 # 🏦 Bank-Management API
-A modular Python-based banking system featuring Object-Oriented Programming (OOP), automated testing, and interactive Menu
+
+A modular Python-based banking system featuring Object-Oriented Programming (OOP), automated testing, and a modern REST API interface.
+
+### 🛠️ Tech Stack (Cloud)
+- **Container Registry:** GitHub Container Registry (GHCR)
+- **CI/CD Pipeline:** GitHub Actions (Automated Docker Build & Push)
 
 ## 🌟 Current Features
-- **OOP Core:** Robust class hierarchy for account management.
-- **Account Types:** Specialized logic for Savings and Current accounts.
-- **Validation:** Strict data handling using Python decorators.
-- **Persistence:** Automated data handling using **JSON** for reliable storage between sessions.
-
+## 🌟 Key Features
+- **OOP Core:** Robust class hierarchy (Inheritance) with strict data validation using Python Decorators (@property/@setter).
+- **REST API:** Modern web interface built with **FastAPI** and asynchronous support.
+- **Persistence:** Automated data handling using **JSON** for reliable storage.
+- **Quality Assurance:** Full test coverage with automated **Unit-Tests**.
+- **Documentation:** Auto-generated technical documentation via **pdoc**.
+- **Cloud Ready:** Includes **Docker** configuration for seamless deployment (e.g., Azure).
 
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
 Ensure you have Python 3.10+ installed.
 
-### 2. Run the Application
-Interactive CLI :
+### 2. Installation
+Clone the repository and install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Run the Application
+You can choose between the Interactive CLI or the Web API:
 
 **Interactive Menu (CLI):**
 ```bash
 python main.py
 ```
 
-### 🌐 REST API (FastAPI)
-The system offers a complete REST interface that maps all the functions of the CLI menu.
-
-**Server starten:**
+**REST API (FastAPI):**
 ```bash
 uvicorn api:app --reload
 ```
----
+Once started, access the **Interactive API Documentation (Swagger)** at:  
+👉 [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## 🧪 Testing
 The project follows a modular structure where business logic and test suites are strictly separated. 
@@ -36,6 +47,13 @@ The project follows a modular structure where business logic and test suites are
 **Run the automated test suite from the root directory:**
 ```bash
 python -m unittest discover -s tests
+```
+
+## 🐳 Docker Deployment
+Build and run the containerized application locally:
+```bash
+docker build -t bank-api .
+docker run -p 8000:8000 bank-api
 ```
 
 ## 📚 Documentation
@@ -62,10 +80,13 @@ Bank-Management-API/
 │   ├── __init__.py
 │   ├── test_banken.py
 │   └── test_konto.py
-├── main.py             # Logic controller
+├── api.py              # FastAPI implementation & REST Endpoints
+├── main.py             # Logic controller & Interactive CLI
 ├── konto.py            # Base class with core validation logic
 ├── girokonto.py        # Specialized account type (Inheritance)
 ├── sparkonto.py        # Specialized account type (Inheritance)
+├── requirements.txt    # Project dependencies
+├── Dockerfile          # Containerization for Cloud/DevOps
 └── konten.json         # JSON-based data storage (Persistence)
 ```
 
