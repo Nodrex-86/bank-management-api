@@ -1,4 +1,5 @@
 import unittest
+import random
 from fastapi.testclient import TestClient
 from api import app
 
@@ -10,12 +11,16 @@ class TestBankAPI(unittest.TestCase):
 
     # --- TAG: Allgemein ---
     def test_home(self):
-        """
-        Testet den Willkommens-Endounkt
-        """
+        """Testet den Willkommens-Endpunkt (jetzt als HTML)."""
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "online")
+        
+        # Prüfe, ob der Content-Type HTML ist
+        self.assertIn("text/html", response.headers["content-type"])
+        
+        # Prüfe, ob wichtige Begriffe im HTML-Text vorkommen
+        self.assertIn("Nodrex Bank-Management API", response.text)
+        self.assertIn("static/nr_logo.webp", response.text)
 
     # --- TAG: 1. Übersicht ---
     def test_alle_konten(self):
@@ -57,27 +62,46 @@ class TestBankAPI(unittest.TestCase):
             self.assertTrue(any("Tom" in k["inhaber"] for k in data))
     
     def test_konto_erstellen(self):
+        name = "NodRex"
         payload = {
-            "name":"NodRex",
+            "name":name,
             "typ": "giro",
             "start_saldo": 1000,
             "extra": 200
         }
         response = self.client.post("/konten/erstellen", json=payload)
+
+        # Falls der Name bereits existiert (400 Bad Request mit Vorschlägen)
+        if response.status_code == 400:
+            error_detail = response.json()["detail"]
+            if "Vorschläge:" in response.json()["detail"]:
+                print(f"⚠️ Name '{name}' belegt. Teste automatischen Vorschlag...")
+                
+                # Extrahiere Vorschläge aus dem String "Name existiert bereits. Vorschläge: Name1, Name2, Name3"
+
+                suggestions_part = error_detail.split("Vorschläge: ")[1]
+                suggestions_list = [s.strip() for s in suggestions_part.split(",")]
+                payload["name"] = suggestions_list[0] # Pick the first one
+                response = self.client.post("/konten/erstellen", json=payload)
+                print(f"✅ Zweiter Versuch erfolgreich mit: {payload['name']}")
+
+        # Finaler Check: Jetzt muss es Status 200 sein    
         self.assertEqual(response.status_code, 200)
+        self.assertIn("erstellt", response.json().get("details", "").lower())
 
     def test_konto_erstellen_error(self):
         """
         Testet, ob ungültige Kontotypen angelehnt werden (400 Bad Request).
         """
         payload = {
-            "name": "TestUser",
+            "name": "TestUser" + str(random.randint(100, 999)), # Verhindert Namenskollision,
             "typ": "falscher_typ",
             "start_saldo": 100,
             "extra": 0
         }
         response = self.client.post("/konten/erstellen", json=payload)
         self.assertEqual(response.status_code, 400)
+        self.assertIn("Ungültiger Kontotyp", response.json()["detail"])
 
     # --- TAG: 4. Zinsen ---
     def test_zinsen_gutschreiben(self):

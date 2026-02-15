@@ -1,26 +1,27 @@
-# 🏦 Bank-Management API
+# 🏦 Bank-Management API ![Python CI](https://github.com/Nodrex-86/bank-management-api/actions/workflows/python-app.yml/badge.svg)
 
-A modular Python-based banking system featuring Object-Oriented Programming (OOP), automated testing, and a modern REST API interface.
+A modular banking system built with Python, demonstrating advanced **Software Architecture**, automated testing, and a modern REST API.
 
 ## 🌐 Live Demo & Cloud Infrastructure
-The application is containerized and automatically deployed to the cloud using a custom CI/CD pipeline.
+The application is containerized and automatically deployed to the cloud using a robust CI/CD pipeline.
 
-- **Live API Documentation:** 👉 [Interactive Swagger UI (Azure)](https://nodrex-management-api-ddhqgfgtg6b4c7hm.westeurope-01.azurewebsites.net/docs)
+- **Live Landing Page:** 👉 [Nodrex Bank API (Azure)](https://nodrex-management-api-ddhqgfgtg6b4c7hm.westeurope-01.azurewebsites.net)
+- **Interactive API Docs:** 👉 [Swagger UI (Azure)](https://nodrex-management-api-ddhqgfgtg6b4c7hm.westeurope-01.azurewebsites.net/docs)
 - **Deployment Status:** [![Build and Deploy FastAPI to Azure](https://github.com/Nodrex-86/bank-management-api/actions/workflows/main.yml/badge.svg)](https://github.com/Nodrex-86/bank-management-api/actions/workflows/main.yml)
 
-### 🛠️ Tech Stack (Cloud)
+### 🛠️ Tech Stack (DevOps & Cloud)
 - **Cloud Provider:** Microsoft Azure (App Services)
-- **Container Registry:** GitHub Container Registry (GHCR)
-- **CI/CD Pipeline:** GitHub Actions (Automated Docker Build & Push)
-- **Security:** Azure Service Principals (RBAC)
+- **Containerization:** Docker & GitHub Container Registry (GHCR)
+- **CI/CD:** GitHub Actions (Automated Testing, Docker Build & Push)
+- **Web Framework:** FastAPI (Asynchronous REST API)
 
 ## 🌟 Key Features
-- **OOP Core:** Robust class hierarchy (Inheritance) with strict data validation using Python Decorators (@property/@setter).
-- **REST API:** Modern web interface built with **FastAPI** and asynchronous support.
-- **Persistence:** Automated data handling using **JSON** for reliable storage.
-- **Quality Assurance:** Full test coverage with automated **Unit-Tests**.
-- **Documentation:** Auto-generated technical documentation via **pdoc**.
-- **Cloud Ready:** Includes **Docker** configuration for seamless deployment (e.g., Azure).
+- **Advanced Architecture:** Implements the **Repository Pattern** with a decoupled `StorageInterface`, allowing seamless switching between JSON and SQL databases.
+- **Persistence Layer:** Structured data handling with **JSON Storage** (and upcoming SQLite/SQLAlchemy support).
+- **Smart Validation:** Integrated duplicate name check with **automated name suggestions** (randomized suffixes) to ensure data integrity.
+- **OOP Core:** Deep use of inheritance, encapsulation, and Python Decorators (`@property`/`@setter`).
+- **Modern UI:** Custom HTML Landing Page with **Dark Mode** support and automated Swagger documentation.
+- **Quality Assurance:** Comprehensive test coverage for business logic and API endpoints via `unittest`.
 
 ## 🚀 Quick Start
 
@@ -34,7 +35,7 @@ pip install -r requirements.txt
 ```
 
 ### 3. Run the Application
-You can choose between the Interactive CLI or the Web API:
+The project supports both an Interactive CLI and a Web API:
 
 **Interactive Menu (CLI):**
 ```bash
@@ -49,6 +50,7 @@ Once started, access the **Interactive API Documentation (Swagger)** at:
 👉 [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## 🧪 Testing
+The system is built for stability. Every commit is verified via GitHub Actions.
 The project follows a modular structure where business logic and test suites are strictly separated. Automated tests ensure the reliability of both account logic and API endpoints.
 
 **Prerequisites:**
@@ -88,20 +90,29 @@ The output will be generated in the ./dokumentation folder.
 
 ```text
 Bank-Management-API/
-├── .github/workflows/  # CI/CD Pipeline Definitions
+├── .github/workflows/          # CI/CD Pipeline Definitions
     ├── main.yml
-├── tests/              # Automated Test Suites
-│   ├── __init__.py
-│   ├── test_banken.py
-│   └── test_konto.py
-├── api.py              # FastAPI implementation & REST Endpoints
-├── main.py             # Logic controller & Interactive CLI
-├── konto.py            # Base class with core validation logic
-├── girokonto.py        # Specialized account type (Inheritance)
-├── sparkonto.py        # Specialized account type (Inheritance)
-├── requirements.txt    # Project dependencies
-├── Dockerfile          # Containerization for Cloud/DevOps
-└── konten.json         # JSON-based data storage (Persistence)
+    ├── python-app.yml
+├── tests/                      # Automated Test Suites
+    ├── __init__.py
+    ├── __init__.py
+    ├── test_banken.py
+    └── test_konto.py
+├── static/              # Assets (Favicon, Logo, Branding)
+    ├── favicon.ico
+    ├── nr_logo.jpg
+    ├── nr_logo.png
+    └── nr.logo.webp
+├── storage_interface.py        # Abstract Base Class (Repository Pattern)
+├── json_storage.py             # JSON-specific Persistence Implementation
+├── api.py                      # FastAPI implementation & REST Endpoints
+├── api.py                      # FastAPI implementation & REST Endpoints
+├── main.py                     # Logic controller & Interactive CLI
+├── konto.py                    # Base class with core validation logic
+├── girokonto.py                # Specialized account type (Inheritance)
+├── sparkonto.py                # Specialized account type (Inheritance)
+├── Dockerfile                  # Containerization for Cloud/DevOps
+├── requirements.txt            # Project dependencies
 ```
 
 
