@@ -9,6 +9,8 @@ from json_storage import JSONStorage
 from main import initialisiere_standard_konten, filtere_konten
 from sparkonto import Sparkonto
 from girokonto import Girokonto
+import time
+from logger_config import logger
 
 
 # Globaler Storage-Provider (später einfach durch SQLiteStorage ersetzbar)
@@ -322,3 +324,22 @@ async def favicon():
 
 # Mounten für alle anderen statischen Dateien (z.B. Bilder für die Doku)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.middleware("http")
+async def log_requests(request, call_next):
+   start_time = time.time()
+
+   # Die Anfrage wird verarbeitet
+   response = await call_next(request)
+
+   duration = time.time() - start_time
+
+   # Monitoring Log-Eintrag
+   logger.info(
+       f"Inbound: {request.method} {request.url.path} | "
+       f"Status: {response.status_code} | "
+       f"Duration: {duration:.4f}s"
+   ) 
+
+   return response

@@ -4,10 +4,9 @@ Hauptmodul zur Verwaltung und Automatisierung von Bankkonten.
 Nutzung von JSON-Persistenz und interaktivem Menü.
 """
 from json_storage import JSONStorage
-import os
-import json
 from sparkonto import Sparkonto
 from girokonto import Girokonto
+from logger_config import logger
 
 # --- KONFIGURATION ---
 DB_FILE = "konten.json"
@@ -206,7 +205,7 @@ def interaktives_menue(konten_liste):
 
 # --- HAUPTPROGRAMM ---
 if __name__ == "__main__":
-
+    logger.info(f"Programm gestartet")
     storage = JSONStorage("konten.json")
 
     try:
