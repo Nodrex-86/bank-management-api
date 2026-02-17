@@ -3,6 +3,8 @@ __pycache__/
 .venv/
 .git/
 .github/
+.env
 dokumentation/
 konten.json
 logs/
+check_hash.py

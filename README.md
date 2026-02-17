@@ -29,6 +29,13 @@ The application implements a professional logging and monitoring strategy to ens
 - **Performance Middleware**: A custom FastAPI middleware automatically measures and logs the response time (latency) for every incoming request.
 - **Production Readiness**: Structured logs allow for advanced error tracking and auditing in cloud environments like Azure App Service or Container Apps.
 
+## 🔐 Security & Authentication
+The API implements a robust security layer based on Industry Standards:
+- **JWT Authentication**: Secure stateless authentication using JSON Web Tokens (HS256).
+- **RBAC (Role-Based Access Control)**: Different permission levels for `admin` (full access) and `DEMO_USER` (restricted transactions).
+- **Password Hashing**: Industry-standard encryption using `bcrypt` to protect user credentials.
+- **Environment Safety**: Sensitive data (Secret Keys, Hashes) are managed via Environment Variables and `.env` files, ensuring no secrets are leaked to the repository.
+
 
 ## 🚀 Quick Start
 
@@ -112,6 +119,8 @@ Bank-Management-API/
     ├── __init__.py
     ├── test_banken.py
     └── test_konto.py
+├── .env.example                # Sensitive data (Secret Keys, Hashes) are managed via Environment Variables and `.env` files (example)
+├── auth_handler.py             # Secure stateless authentication using JSON Web Tokens (HS256).
 ├── storage_interface.py        # Abstract Base Class (Repository Pattern)
 ├── json_storage.py             # JSON-specific Persistence Implementation
 ├── api.py                      # FastAPI implementation & REST Endpoints
