@@ -5,3 +5,4 @@ __pycache__/
 .github/
 dokumentation/
 konten.json
+logs/

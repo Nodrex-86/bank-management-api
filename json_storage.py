@@ -4,6 +4,9 @@ from storage_interface import StorageInterface
 from sparkonto import Sparkonto
 from girokonto import Girokonto
 import random
+from logger_config import logger
+
+
 
 class JSONStorage(StorageInterface):
     """
@@ -41,9 +44,11 @@ class JSONStorage(StorageInterface):
                     elif d["typ"] == "Sparkonto":
                         k = Sparkonto(d["inhaber"], d["kontostand"], d["extra"])
                     geladene_konten.append(k)
+            logger.info(f"JSON-Daten erfolgreich geladen ({self.dateiname})")
             return geladene_konten
         except Exception as e:
-            return RuntimeError(f"Datenbankfehler (JSON): {e}")
+            logger.error(f"Datenbankfehler (JSON) bein Laden von {self.dateiname}: {e}")
+            raise RuntimeError(f"Datenbankfehler (JSON): {e}")
         
     def speichern(self, konten_liste):
         """
@@ -66,8 +71,10 @@ class JSONStorage(StorageInterface):
         try:
             with open(self.dateiname, "w", encoding="utf-8") as f:
                 json.dump(daten, f, indent=4)
+            logger.info(f"Speichervorgang (JSON) erfolgreich in {self.dateiname} gesichert")
         except Exception as e:
-            raise IOError(f"Speichervorgang fehlergeschlagen (JSON): {e}")
+            logger.error(f"Speichervorgang (JSON) fehlergeschlagen ({self.dateiname}): {e}")
+            raise IOError(f"Speichervorgang (JSON) fehlergeschlagen : {e}")
         
     def name_existiert(self, name):
         """
@@ -81,7 +88,7 @@ class JSONStorage(StorageInterface):
         """
         name_bereinigt = name.strip().lower()
         aktuelle_konten = self.laden()
-        return any(k.inhaber.lower() == name_bereinigt .strip().lower() for k in aktuelle_konten)
+        raise any(k.inhaber.lower() == name_bereinigt .strip().lower() for k in aktuelle_konten)
     
     def konto_holen(self, name):
         """
@@ -103,7 +110,8 @@ class JSONStorage(StorageInterface):
         konten = self.laden() # Lädt aktuelle Daten
         konto = next((k for k in konten if k.inhaber.lower() == name_bereinigt), None)
         if konto is None:
-            raise ValueError(f"Konto für '{name}' wurde nicht gefunden.")
+            logger.warning(f"Konto für '{name}' wurde in ({self.dateiname}) nicht gefunden.")
+            raise ValueError(f"Konto für '{name}' wurde in ({self.dateiname}) nicht gefunden.")
         return konto
     
     def generiere_vorschlaege(self, name):
@@ -135,8 +143,10 @@ class JSONStorage(StorageInterface):
         """
         if self.name_existiert(konto.inhaber):
             vorschlaege = self.generiere_vorschlaege(konto.inhaber)
+            logger.warning(f"Versuchtes Duplikat (JSON) ebgelehnt für Inhaber: {konto.inhaber}")
             raise ValueError(f"Name existiert bereits. Vorschläge: {', '.join(vorschlaege)}")
         
         aktuelle_konten = self.laden()
         aktuelle_konten.append(konto)
+        logger.info(f"Neues Konto (JSON) erstellt: {konto.inhaber} ({type(konto).__name__})")
         self.speichern(aktuelle_konten)
