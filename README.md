@@ -23,6 +23,13 @@ The application is containerized and automatically deployed to the cloud using a
 - **Modern UI:** Custom HTML Landing Page with **Dark Mode** support and automated Swagger documentation.
 - **Quality Assurance:** Comprehensive test coverage for business logic and API endpoints via `unittest`.
 
+## 📊 Logging & Monitoring
+The application implements a professional logging and monitoring strategy to ensure system stability and performance:
+- **Centralized Logging**: All critical operations, data persistence events, and errors are recorded in `logs/bank_api.log` and streamed to `stdout` for Docker/Azure compatibility.
+- **Performance Middleware**: A custom FastAPI middleware automatically measures and logs the response time (latency) for every incoming request.
+- **Production Readiness**: Structured logs allow for advanced error tracking and auditing in cloud environments like Azure App Service or Container Apps.
+
+
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
@@ -93,16 +100,18 @@ Bank-Management-API/
 ├── .github/workflows/          # CI/CD Pipeline Definitions
     ├── main.yml
     ├── python-app.yml
+├── logs/                       # Forder for a professional logging and monitoring
+    └── bank_api.log            # All critical operations, data persistence events, and errors
+├── static/                     # Assets (Favicon, Logo, Branding)
+    ├── favicon.ico
+    ├── nr_logo.jpg
+    ├── nr_logo.png
+    └── nr.logo.webp
 ├── tests/                      # Automated Test Suites
     ├── __init__.py
     ├── __init__.py
     ├── test_banken.py
     └── test_konto.py
-├── static/              # Assets (Favicon, Logo, Branding)
-    ├── favicon.ico
-    ├── nr_logo.jpg
-    ├── nr_logo.png
-    └── nr.logo.webp
 ├── storage_interface.py        # Abstract Base Class (Repository Pattern)
 ├── json_storage.py             # JSON-specific Persistence Implementation
 ├── api.py                      # FastAPI implementation & REST Endpoints
