@@ -12,16 +12,26 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # Hier definieren wir die Umgebungsvariablen für den gesamten Job
+    env:
+      BANK_SECRET_KEY: ${{ secrets.BANK_SECRET_KEY }}
+      ADMIN_HASH: ${{ secrets.ADMIN_HASH }}
+      DEMO_HASH: ${{ secrets.DEMO_HASH }}
+
     steps:
     - uses: actions/checkout@v4
+    
     - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
+        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+   
     - name: Test with unittest
       run: |
         python -m unittest discover tests

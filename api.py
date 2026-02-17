@@ -1,4 +1,8 @@
-from fastapi import FastAPI, HTTPException, Query, Response
+
+from fastapi import FastAPI, HTTPException, Query, Response, Depends, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from auth_handler import create_access_token, verify_password, USERS_DB, SECRET_KEY, ALGORITHM
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 import os
@@ -11,10 +15,14 @@ from sparkonto import Sparkonto
 from girokonto import Girokonto
 import time
 from logger_config import logger
+import inspect
 
 
 # Globaler Storage-Provider (später einfach durch SQLiteStorage ersetzbar)
 storage = JSONStorage("konten.json")
+
+# Definiert, wo die API nach dem TOken sucht (im Endpunkt /Login)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def stelle_datenbank_sicher():
     """Prüft, ob Daten vorhanden sind, sonst Initialisierung."""
@@ -29,11 +37,74 @@ def stelle_datenbank_sicher():
 
 stelle_datenbank_sicher()
 
+# Hilfsfunktion zur Token-Validierung und Rollen-Prüfung
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    """
+    Validiert den bereitgestellten JWT-Token und extrahiert die Benutzerinformationen.
+
+    Diese Funktion dient als zentrale Dependency für geschützte Endpunkte. Sie prüft 
+    die Signatur des Tokens, das Ablaufdatum sowie das Vorhandensein der Benutzerrolle.
+
+    Args:
+        token (str): Der im Authorization-Header übermittelte JWT-Token. 
+            Wird automatisch durch FastAPI aus dem OAuth2-Schema extrahiert.
+
+    Raises:
+        HTTPException (401): Wird ausgelöst, wenn der Token ungültig, abgelaufen 
+            oder die Benutzeridentität (sub) nicht enthalten ist.
+
+    Returns:
+        dict: Ein Dictionary mit den Benutzerdaten (z. B. {"username": "admin", "role": "admin"}).
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token konnte nicht validiert werden oder ist abgelaufen.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # Dekodieren des Tokens mit dem Secret Key
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        role: str = payload.get("role")
+        
+        if username is None or role is None:
+            raise credentials_exception
+            
+        return {"username": username, "role": role}
+        
+    except JWTError:
+        # Tritt auf bei falscher Signatur oder abgelaufenem Token
+        raise credentials_exception
+
+
+description_text = """
+### 🚀 Professionelle REST-Schnittstelle zur Bankverwaltung
+Dieses System ermöglicht die sichere Verwaltung von Bankkonten basierend auf modernsten Sicherheitsstandards (JWT).
+
+---
+
+### 🔑 Test-Zugangsdaten (Demo-Umgebung)
+Nutzen Sie den **Authorize**-Button oben rechts (Schloss-Symbol), um sich anzumelden:
+
+| Rolle | Username | Passwort | Berechtigung |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin` | *Intern* | Voller Zugriff & Kontoverwaltung |
+| **Demo-User** | `DEMO_USER` | `Demo_Nodrex_API_2026` | Nur Transaktionen (Einzahlen/Abheben) |
+
+---
+
+### 🔒 Berechtigungsstufen (RBAC)
+- **Öffentlich (Kein Login):** Login-Vorgang (`POST/login`), Abrufen der Kontenübersicht (`GET/konten`) und Zins-Simulationen.
+- **Eingeschränkt (Demo-User):** Durchführung von Transaktionen (Einzahlen/Abheben) auf bestehenden Konten.
+- **Vollzugriff (Admin):** Erstellen neuer Konten sowie administrative Verwaltungsaufgaben.
+
+*Hinweis: Die Zins-Simulation verändert den dauerhaften Kontostand nicht und ist daher öffentlich zugänglich.*
+"""
+
 app = FastAPI(
     title="🏦 Nodrex Bank-Management API",
-    description="REST-Schnittstelle mit austauschbarem Storage-System (Repository Pattern), basierend auf OOP-Prinzipien",
-    docs_url=None, # Wir deaktivieren die Standard-Doku kurz, um sie mit Icon zu laden
-    version="1.3.0"
+    description=inspect.cleandoc(description_text), # Entfernt Einrückungs-Fehler
+    version="1.4.0"
 )
 
 # --- SCHEMATA ---
@@ -51,8 +122,6 @@ class TransaktionErgebnis(BaseModel):
     neuer_stand: float
 
 # --- ENDPUNKTE ---
-
-from fastapi.responses import HTMLResponse
 
 @app.get("/", tags=["Allgemein"], response_class=HTMLResponse)
 def home():
@@ -114,6 +183,15 @@ def home():
                     box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
                 }
                 strong { color: #28a745; }
+                .security-badge {
+                    margin-top: 15px;
+                    font-size: 0.9em;
+                    color: #f1c40f; /* Gold für Sicherheit */
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                }
             </style>
         </head>
         <body>
@@ -121,12 +199,54 @@ def home():
                 <img src="/static/nr_logo.webp" alt="Nodrex Logo" class="logo">
                 <h1>Nodrex Bank-Management API</h1>
                 <p>Status: <span style="color: #28a745;">● Online</span></p>
-                <p>Nutzen Sie die interaktive Dokumentation, um die Endpunkte zu testen:</p>
+                <div class="security-badge">
+                    <span>🔒</span> Gesichert mit JWT-Authentifizierung
+                </div>
+                <p>Nutzen Sie die Dokumentation, um sich zu authentifizieren und Endpunkte zu testen:</p>
                 <a href="/docs" class="btn">Zur Swagger Dokumentation</a>
             </div>
         </body>
     </html>
     """
+
+# --- SECURITY CONFIG ---
+
+@app.post("/login", tags=["Security"])
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    **Login für API-Zugang**  
+    Authentifiziert einen Benutzer und gibt einen JWT-Token zurück, der für den Zugriff 
+    auf geschützte (schreibende) Operationen benötigt wird.
+
+    Args:
+        form_data (OAuth2PasswordRequestForm): Enthält die vom Benutzer gesendeten 
+            Anmeldedaten (Username und Passwort) aus dem HTTP-Form-Body.
+
+    Raises:
+        HTTPException: Wird geworfen (401 Unauthorized), wenn der Username falsch ist 
+            oder das Passwort nicht mit dem gespeicherten Hash übereinstimmt.
+
+    Returns:
+        dict: Ein Dictionary, das den 'access_token' und den 'token_type' (Bearer) enthält.
+    """
+    # 1. Prüfen, ob der User in unserer kleinen Datenbank existiert
+    user_data = USERS_DB.get(form_data.username)
+
+    # 2. Passwort validieren
+    if not user_data or not verify_password(form_data.password, user_data["hash"]):
+        logger.warning(f"Login-Fehlversuch: {form_data.username}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ungültige Anmeldedaten",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # 3. Token erstellen und Rolle ("role") mit in die Payload packen
+    access_token = create_access_token(
+        data={"sub": form_data.username, "role": user_data["role"]}
+    )
+    logger.info(f"Erfolgreicher Login: {form_data.username} (Rolle: {user_data['role']})")
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.get("/docs", include_in_schema=False)
@@ -152,14 +272,20 @@ def alle_konten():
 @app.post("/transaktion/einzahlen/{name}", response_model=TransaktionErgebnis, tags=["2. Transaktionen"])
 def einzahlen_api(
     name: str, 
-    betrag: float = Query(description="Betrag, der eingezahlt werden soll")
+    betrag: float = Query(description="Betrag, der eingezahlt werden soll"),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     **Einzahlung vornehmen**  
+    Erlaubt für Administratoren und Demo-Benutzer.
     - Prüft die Existenz des Kontos.
     - Aktualisiert den Kontostand unter Nutzung der Klassen-Logik.
     - Speichert die Änderungen dauerhaft in der JSON-Datenbank.
     """
+    # Security Check
+    if current_user["role"] not in ["admin", "viewer"]:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung für Transaktionen.")
+    
     try:
         # 1. Daten laden
         konten = storage.laden()
@@ -173,6 +299,7 @@ def einzahlen_api(
         # 4. Speichern
         storage.speichern(konten)
         
+        logger.info(f"Transaktion: {current_user['username']} hat {betrag} EUR auf {name} eingezahlt.")
         return {
             "nachricht": nachricht, 
             "inhaber": k.inhaber,
@@ -189,12 +316,17 @@ def einzahlen_api(
 @app.post("/transaktion/abheben/{name}", response_model=TransaktionErgebnis, tags=["2. Transaktionen"])
 def abheben_api(
     name: str, 
-    betrag: float = Query(description="Betrag, der abgehoben werden soll")
+    betrag: float = Query(description="Betrag, der abgehoben werden soll"),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     **Geld abheben**  
     Nutzt die Dispo-Logik des Girokontos oder die Sperre des Sparkontos.
     """
+    # Security Check
+    if current_user["role"] not in ["admin", "viewer"]:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung für Transaktionen.")
+    
     try:
         konten = storage.laden()
         k = storage.konto_holen(name)
@@ -202,6 +334,7 @@ def abheben_api(
         nachricht = k.abheben(betrag) 
         storage.speichern(konten)
         
+        logger.info(f"Transaktion: {current_user['username']} hat {betrag} EUR von {name} abgehoben.")
         return {
             "nachricht": nachricht,
             "inhaber": k.inhaber,
@@ -232,13 +365,21 @@ def api_suchen(name: str):
         return {"nachricht": "Keine Treffer", "ergebnisse": []}
     return treffer
 
-
+# --- GESCHÜTZTER ENDPUNKT ---
 @app.post("/konten/erstellen", tags=["3. Verwaltung"])
-def konto_erstellen(daten: KontoErstellenSchema):
+def konto_erstellen(daten: KontoErstellenSchema, current_user: dict = Depends(get_current_user)):
     """
     **Neues Konto erstellen**  
     Erzeugt ein neues Giro- oder Sparkonto-Objekt und speichert es in der Datenbank.
+    Erfordert einen gültigen Token.
     """
+    # --- ROLLEN-CHECK ---
+    if current_user["role"] != "admin":
+        logger.warning(f"Zugriff verweigert: User {current_user['username']} hat keine Admin-Rechte.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="⚠️ Zugriff verweigert: Nur Administratoren dürfen Konten erstellen."
+        )
     try:
         typ = daten.typ.lower().strip()
         
@@ -253,7 +394,7 @@ def konto_erstellen(daten: KontoErstellenSchema):
         # Hier wird automatisch auf Duplikate geprüf
         storage.konto_hinzufuegen(neues_k)
         
-        return {"status": "✅ Erfolg", "details": f"Konto für {daten.name} ({typ}) erstellt."}
+        return {"status": "✅ Erfolg", "admin": current_user["username"], "details": f"Konto für {daten.name} ({typ}) erstellt."}
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"⚠️ {str(e)}")
@@ -263,11 +404,16 @@ def konto_erstellen(daten: KontoErstellenSchema):
 
 
 @app.post("/zinsen/gutschreiben/{name}", tags=["4. Zinsen"])
-def zinsen_gutschreiben(name: str):
+def zinsen_gutschreiben(name: str, current_user: dict = Depends(get_current_user)):
     """
     **Zinsen fest verbuchen**  
     Berechnet die Zinsen für ein Sparkonto und aktualisiert den Kontostand dauerhaft.
     """
+    # Security Check
+    if current_user["role"] != "admin":
+        logger.warning(f"Sicherheitswarnung: User {current_user['username']} (Rolle: {current_user['role']}) versuchte Zinsgutschrift für {name}.")
+        raise HTTPException(status_code=403, detail="Nur Administratoren dürfen Zinsen gutschreiben.")
+    
     try:
         konten = storage.laden()
         k = storage.konto_holen(name)
@@ -278,10 +424,12 @@ def zinsen_gutschreiben(name: str):
             
         nachricht = k.zinsen_berechnen()
         storage.speichern(konten)
-        
+
+        logger.info(f"Zinsgutschrift erfolgreich: Admin '{current_user['username']}' hat Zinsen für Konto '{name}' verbucht. {nachricht}")
         return {"status": "✅ Erfolg", "details": nachricht, "neuer_stand": k.kontostand}
 
     except ValueError as e:
+        logger.error(f"Fehler bei Zinsgutschrift für {name}: {e}")
         raise HTTPException(status_code=400, detail=f"⚠️ {str(e)}")
 
 
