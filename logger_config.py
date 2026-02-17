@@ -2,9 +2,11 @@ import logging
 import sys
 import os
 
+
 # Verzeichnis für Log-Dateien
-if not os.path.exists("logs"):
-    os.makedirs("logs")
+LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
 
 def get_bank_logger():
     """

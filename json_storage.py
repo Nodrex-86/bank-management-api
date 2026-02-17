@@ -88,7 +88,7 @@ class JSONStorage(StorageInterface):
         """
         name_bereinigt = name.strip().lower()
         aktuelle_konten = self.laden()
-        raise any(k.inhaber.lower() == name_bereinigt .strip().lower() for k in aktuelle_konten)
+        return any(k.inhaber.lower() == name_bereinigt.strip().lower() for k in aktuelle_konten)
     
     def konto_holen(self, name):
         """

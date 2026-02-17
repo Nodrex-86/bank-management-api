@@ -84,7 +84,8 @@ class TestBankAPI(unittest.TestCase):
                 payload["name"] = suggestions_list[0] # Pick the first one
                 response = self.client.post("/konten/erstellen", json=payload)
                 print(f"✅ Zweiter Versuch erfolgreich mit: {payload['name']}")
-
+        if response.status_code == 500:
+            print(f"🔥 API Error Detail: {response.json().get('detail')}")
         # Finaler Check: Jetzt muss es Status 200 sein    
         self.assertEqual(response.status_code, 200)
         self.assertIn("erstellt", response.json().get("details", "").lower())
