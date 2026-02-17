@@ -8,6 +8,14 @@ class TestBankAPI(unittest.TestCase):
         from api import stelle_datenbank_sicher
         stelle_datenbank_sicher()
         self.client = TestClient(app)
+    # --- TAG: Security ---
+
+    def get_token(self):
+        """Hilfsfunktion: Holt einen frischen Token für geschützte Tests."""
+        login_data = {"username": "admin", "password": "NodRex_Bank_2026"}
+        response = self.client.post("/login", data=login_data) # Senden als Form-Data
+        return response.json()["access_token"]
+    
 
     # --- TAG: Allgemein ---
     def test_home(self):
@@ -36,7 +44,9 @@ class TestBankAPI(unittest.TestCase):
         """
         Testen Erfolgreiche Einzahlung
         """
-        response = self.client.post("/transaktion/einzahlen/Tom?betrag=100")
+        token = self.get_token() # 1. Login
+        headers = {"Authorization": f"Bearer {token}"} # 2. Token in Header packen
+        response = self.client.post("/transaktion/einzahlen/Tom?betrag=100", headers=headers)
         self.assertEqual(response.status_code, 200)
         self.assertIn("eingezahlt", response.json()["nachricht"].lower())
 
@@ -44,7 +54,9 @@ class TestBankAPI(unittest.TestCase):
         """
         Testet Fehler bei zu hohen Betrag
         """
-        response = self.client.post("/transaktion/abheben/Tom?betrag=100000")
+        token = self.get_token() # 1. Login
+        headers = {"Authorization": f"Bearer {token}"} # 2. Token in Header packen
+        response = self.client.post("/transaktion/abheben/Tom?betrag=100000", headers=headers)
         self.assertEqual(response.status_code, 400)
 
     
@@ -62,6 +74,8 @@ class TestBankAPI(unittest.TestCase):
             self.assertTrue(any("Tom" in k["inhaber"] for k in data))
     
     def test_konto_erstellen(self):
+        token = self.get_token() # 1. Login
+        headers = {"Authorization": f"Bearer {token}"} # 2. Token in Header packen
         name = "NodRex"
         payload = {
             "name":name,
@@ -69,7 +83,7 @@ class TestBankAPI(unittest.TestCase):
             "start_saldo": 1000,
             "extra": 200
         }
-        response = self.client.post("/konten/erstellen", json=payload)
+        response = self.client.post("/konten/erstellen", json=payload, headers=headers)
 
         # Falls der Name bereits existiert (400 Bad Request mit Vorschlägen)
         if response.status_code == 400:
@@ -82,7 +96,7 @@ class TestBankAPI(unittest.TestCase):
                 suggestions_part = error_detail.split("Vorschläge: ")[1]
                 suggestions_list = [s.strip() for s in suggestions_part.split(",")]
                 payload["name"] = suggestions_list[0] # Pick the first one
-                response = self.client.post("/konten/erstellen", json=payload)
+                response = self.client.post("/konten/erstellen", json=payload, headers=headers)
                 print(f"✅ Zweiter Versuch erfolgreich mit: {payload['name']}")
         if response.status_code == 500:
             print(f"🔥 API Error Detail: {response.json().get('detail')}")
@@ -94,13 +108,15 @@ class TestBankAPI(unittest.TestCase):
         """
         Testet, ob ungültige Kontotypen angelehnt werden (400 Bad Request).
         """
+        token = self.get_token() # 1. Login
+        headers = {"Authorization": f"Bearer {token}"} # 2. Token in Header packen
         payload = {
             "name": "TestUser" + str(random.randint(100, 999)), # Verhindert Namenskollision,
             "typ": "falscher_typ",
             "start_saldo": 100,
             "extra": 0
         }
-        response = self.client.post("/konten/erstellen", json=payload)
+        response = self.client.post("/konten/erstellen", json=payload, headers=headers)
         self.assertEqual(response.status_code, 400)
         self.assertIn("Ungültiger Kontotyp", response.json()["detail"])
 
@@ -109,7 +125,9 @@ class TestBankAPI(unittest.TestCase):
         """
         Testet, ob auf Sparkonto Zinsen richtig gutgeschrieben wird
         """
-        response = self.client.post("/zinsen/gutschreiben/Jim")
+        token = self.get_token() # 1. Login
+        headers = {"Authorization": f"Bearer {token}"} # 2. Token in Header packen
+        response = self.client.post("/zinsen/gutschreiben/Jim", headers=headers)
         if response.status_code == 200:
             self.assertIn("Erfolg", response.json()["status"])
         else:

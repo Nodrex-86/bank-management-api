@@ -5,4 +5,6 @@ __pycache__/
 dokumentation/
 .vscode/
 .venv/
+.env
 logs/
+check_hash.py
