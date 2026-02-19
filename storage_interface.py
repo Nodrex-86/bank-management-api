@@ -61,3 +61,13 @@ class StorageInterface(ABC):
             konto (object): Das Konto-Objekt (Giro- oder Sparkonto), das hinzugefügt werden soll.
         """
         pass
+
+    @abstractmethod
+    def update_kontostand(self, konto):
+        """
+        Aktualisiert nur den Kontostand eines bereits existierenden Kontos.
+        
+        Args:
+            konto (object): Das Konto-Objekt mit dem neuen Stand.
+        """
+        
