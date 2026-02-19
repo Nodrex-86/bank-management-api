@@ -3,6 +3,7 @@ FROM python:3.12-slim
 
 # 2. Arbeitsverzeichnis im Container
 WORKDIR /app
+RUN chmod -R 777 /app
 
 # 3. Abhängigkeiten kopieren und installieren
 COPY requirements.txt .

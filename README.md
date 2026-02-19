@@ -22,6 +22,11 @@ The application is containerized and automatically deployed to the cloud using a
 - **OOP Core:** Deep use of inheritance, encapsulation, and Python Decorators (`@property`/`@setter`).
 - **Modern UI:** Custom HTML Landing Page with **Dark Mode** support and automated Swagger documentation.
 - **Quality Assurance:** Comprehensive test coverage for business logic and API endpoints via `unittest`.
+- **Hybrid Storage Engine**: Seamlessly switch between **JSON** and **SQLite** using a dynamic `StorageFactory`.
+- **Relational Persistence**: Full SQL support with optimized `UPDATE` operations and `UNIQUE` constraints.
+- **Environment-Driven Configuration**: Manage storage types, file paths, and security keys via `.env` and Azure App Settings.
+- **Interactive CLI**: Choose your preferred storage mode directly at startup.
+
 
 ## 📊 Logging & Monitoring
 The application implements a professional logging and monitoring strategy to ensure system stability and performance:
@@ -104,33 +109,39 @@ The output will be generated in the ./dokumentation folder.
 
 ```text
 Bank-Management-API/
-├── .github/workflows/          # CI/CD Pipeline Definitions
-    ├── main.yml
-    ├── python-app.yml
-├── logs/                       # Forder for a professional logging and monitoring
-    └── bank_api.log            # All critical operations, data persistence events, and errors
-├── static/                     # Assets (Favicon, Logo, Branding)
-    ├── favicon.ico
-    ├── nr_logo.jpg
-    ├── nr_logo.png
-    └── nr.logo.webp
-├── tests/                      # Automated Test Suites
-    ├── __init__.py
-    ├── __init__.py
-    ├── test_banken.py
-    └── test_konto.py
-├── .env.example                # Sensitive data (Secret Keys, Hashes) are managed via Environment Variables and `.env` files (example)
-├── auth_handler.py             # Secure stateless authentication using JSON Web Tokens (HS256).
-├── storage_interface.py        # Abstract Base Class (Repository Pattern)
-├── json_storage.py             # JSON-specific Persistence Implementation
-├── api.py                      # FastAPI implementation & REST Endpoints
-├── api.py                      # FastAPI implementation & REST Endpoints
-├── main.py                     # Logic controller & Interactive CLI
-├── konto.py                    # Base class with core validation logic
-├── girokonto.py                # Specialized account type (Inheritance)
-├── sparkonto.py                # Specialized account type (Inheritance)
-├── Dockerfile                  # Containerization for Cloud/DevOps
-├── requirements.txt            # Project dependencies
+├── .github/workflows/          # CI/CD Automatisierung
+│   ├── main.yml                # Haupt-Workflow für Deployment/Integration
+│   └── python-app.yml          # Build- und Test-Automatisierung für Python
+├── static/                     # Statische Medien-Dateien
+│   ├── favicon.ico             # Icon für Web-Browser
+│   ├── nr_logo.jpg             # Branding Logo (JPG)
+│   ├── nr_logo.png             # Branding Logo (PNG)
+│   └── nr_logo.webp            # Optimiertes Web-Bildformat
+├── tests/                      # Test-Suite für Qualitätssicherung
+│   ├── __init__.py             # Markiert Verzeichnis als Python-Modul
+│   ├── test_api.py             # Integrationstests für die REST-Endpunkte
+│   ├── test_banken.py          # Unit-Tests für die Bank-Logik
+│   └── test_konto.py           # Unit-Tests für Kontofunktionen
+├── .dockerignore               # Schließt lokale Dateien vom Docker-Build aus
+├── .env.example                # Vorlage für Umgebungsvariablen (Security!)
+├── .gitignore                  # Verhindert Upload von Unrat (z.B. __pycache__, .db)
+├── api.py                      # FastAPI-Routing und API-Logik
+├── auth_handler.py             # Sicherheit: JWT Token Handling & Verschlüsselung
+├── Dockerfile                  # Bauanleitung für das Docker-Image
+├── generate_docs.bat           # Skript zur automatischen Generierung der Dokumentation
+├── girokonto.py                # Kontoklasse für Girokonten (Vererbung)
+├── json_storage.py             # Speicher-Provider für JSON-Dateien
+├── konto.py                    # Abstrakte oder Basis-Kontoklasse
+├── logger_config.py            # Zentrale Konfiguration für das System-Logging
+├── main.py                     # Startpunkt der Applikation (CLI & Controller)
+├── PRODUKTION_CHECKLIST.md     # Sicherheitsvorgaben für den Live-Betrieb
+├── README.md                   # Hauptdokumentation des Projekts
+├── requirements.txt            # Python-Paketabhängigkeiten
+├── sparkonto.py                # Kontoklasse für Sparkonten (Vererbung)
+├── sqlite_storage.py           # Speicher-Provider für SQL-Datenbanken
+├── storage_factory.py          # Erzeugt dynamisch den gewählten Speichertyp
+└── storage_interface.py        # Definiert Standards für alle Speicherarten (Interface)
+
 ```
 
 

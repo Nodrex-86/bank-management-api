@@ -150,3 +150,13 @@ class JSONStorage(StorageInterface):
         aktuelle_konten.append(konto)
         logger.info(f"Neues Konto (JSON) erstellt: {konto.inhaber} ({type(konto).__name__})")
         self.speichern(aktuelle_konten)
+
+    def update_kontostand(self, konto):
+        """JSON-Workaround: Lädt alles, aktualisiert das eine Konto und speichert neu."""
+        konten = self.laden()
+        for k in konten:
+            if k.inhaber.lower() == konto.inhaber.lower():
+                k.kontostand = konto.kontostand
+                break
+        self.speichern(konten)
+        logger.info(f"JSON: Kontostand für {konto.inhaber} aktualisiert.")
