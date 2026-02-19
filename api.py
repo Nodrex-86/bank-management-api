@@ -9,32 +9,39 @@ import os
 from pathlib import Path
 from fastapi.openapi.docs import get_swagger_ui_html
 from pydantic import BaseModel
-from json_storage import JSONStorage
+# from json_storage import JSONStorage # - FOR OLD VERSION
 from main import initialisiere_standard_konten, filtere_konten
 from sparkonto import Sparkonto
 from girokonto import Girokonto
 import time
 from logger_config import logger
 import inspect
+from storage_factory import get_storage
 
 
 # Globaler Storage-Provider (später einfach durch SQLiteStorage ersetzbar)
-storage = JSONStorage("konten.json")
+# storage = JSONStorage("konten.json") # - FOR OLD VERSION
+# NEW:
+storage = get_storage()
+current_mode = "SQLite (Relational)" if os.getenv("STORAGE_TYPE") == "sql" else "JSON (Dateibasiert)"
 
 # Definiert, wo die API nach dem TOken sucht (im Endpunkt /Login)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def stelle_datenbank_sicher():
-    """Prüft, ob Daten vorhanden sind, sonst Initialisierung."""
-
+    """Prüft, ob Daten vorhanden sind, sonst Initialisierung mit Standard-Konten."""
     try:
-        if not storage.laden():
-            print("☁️ Initialisiere Standard-Datenbank...")
+        aktuelle_konten = storage.laden()
+        if not aktuelle_konten:
+            logger.info("Speicher ist leer. Initialisiere Standard-Konten...")
             standard = initialisiere_standard_konten()
+            # Hier greift jetzt deine neue SQL-Speichermethode!
             storage.speichern(standard)
+            logger.info(f"Erfolgreich {len(standard)} Konten initialisiert.")
     except Exception as e:
-        print(f"Fehler be DB-Initialisierung: {e}")
+        logger.error(f"Fehler bei der Datenbank-Sicherstellung: {e}")
 
+# Beim Start der API aufrufen
 stelle_datenbank_sicher()
 
 # Hilfsfunktion zur Token-Validierung und Rollen-Prüfung
@@ -77,10 +84,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         raise credentials_exception
 
 
-description_text = """
+description_text = f"""
 ### 🚀 Professionelle REST-Schnittstelle zur Bankverwaltung
 Dieses System ermöglicht die sichere Verwaltung von Bankkonten basierend auf modernsten Sicherheitsstandards (JWT).
 
+### 💾 Status: {current_mode} Aktiv
+    Dieses System läuft aktuell im **{current_mode}** Modus. 
+    
+    *Hinweis: Der Speichermodus wird beim Start über Umgebungsvariablen festgelegt.*
 ---
 
 ### 🔑 Test-Zugangsdaten (Demo-Umgebung)
@@ -209,6 +220,17 @@ def home():
     </html>
     """
 
+@app.get("/system/info", tags=["System"])
+def get_system_info(current_user: dict = Depends(get_current_user)):
+    """Gibt Informationen über die aktuelle Speicher-Architektur zurück."""
+    return {
+        "storage_type": type(storage).__name__,
+        "database_connected": True,
+        "environment": os.getenv("AZURE_FUNCTIONS_ENVIRONMENT", "Development"),
+        "version": "1.6.0"
+    }
+
+
 # --- SECURITY CONFIG ---
 
 @app.post("/login", tags=["Security"])
@@ -288,7 +310,7 @@ def einzahlen_api(
     
     try:
         # 1. Daten laden
-        konten = storage.laden()
+        # konten = storage.laden() - nicht mehr notwendig
 
         # 2. Konto suchen (DIESE Zeile wirft den ValueError, wenn nichts gefunden wird)
         k = storage.konto_holen(name)
@@ -297,7 +319,7 @@ def einzahlen_api(
         nachricht = k.einzahlen(betrag)
         
         # 4. Speichern
-        storage.speichern(konten)
+        storage.update_kontostand(k) # storage.speichern(konten) - alte version
         
         logger.info(f"Transaktion: {current_user['username']} hat {betrag} EUR auf {name} eingezahlt.")
         return {
@@ -328,11 +350,11 @@ def abheben_api(
         raise HTTPException(status_code=403, detail="Keine Berechtigung für Transaktionen.")
     
     try:
-        konten = storage.laden()
+        # konten = storage.laden()  - nicht mehr notwendig
         k = storage.konto_holen(name)
         # Hier greift eine Logik aus girokonto.py / sparkonto.py
         nachricht = k.abheben(betrag) 
-        storage.speichern(konten)
+        storage.update_kontostand(k) # storage.speichern(konten) - alte version
         
         logger.info(f"Transaktion: {current_user['username']} hat {betrag} EUR von {name} abgehoben.")
         return {
@@ -415,7 +437,6 @@ def zinsen_gutschreiben(name: str, current_user: dict = Depends(get_current_user
         raise HTTPException(status_code=403, detail="Nur Administratoren dürfen Zinsen gutschreiben.")
     
     try:
-        konten = storage.laden()
         k = storage.konto_holen(name)
         
         # Wir prüfen, ob das Objekt die Methode 'zinsen_berechnen' besitzt
@@ -423,7 +444,7 @@ def zinsen_gutschreiben(name: str, current_user: dict = Depends(get_current_user
             raise ValueError(f"⚠️ Konto '{name}' ist kein Sparkonto und erhält keine Zinsen.")
             
         nachricht = k.zinsen_berechnen()
-        storage.speichern(konten)
+        storage.update_kontostand(k) # storage.speichern(konten) - alte version
 
         logger.info(f"Zinsgutschrift erfolgreich: Admin '{current_user['username']}' hat Zinsen für Konto '{name}' verbucht. {nachricht}")
         return {"status": "✅ Erfolg", "details": nachricht, "neuer_stand": k.kontostand}

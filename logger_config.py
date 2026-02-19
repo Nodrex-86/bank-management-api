@@ -29,6 +29,7 @@ def get_bank_logger():
 
         # 1. StreamHandler für die Konsole (für Docker & Azure Logs)
         console_handler = logging.StreamHandler(sys.stdout)
+        # console_handler.setLevel(logging.WARNING) # when aktiv - Zeigt nur noch Fehler/Warnungen im Terminal
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
 

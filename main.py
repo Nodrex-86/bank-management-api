@@ -3,13 +3,14 @@ bank-management-api
 Hauptmodul zur Verwaltung und Automatisierung von Bankkonten.
 Nutzung von JSON-Persistenz und interaktivem Menü.
 """
-from json_storage import JSONStorage
+import os
 from sparkonto import Sparkonto
 from girokonto import Girokonto
 from logger_config import logger
+from dotenv import load_dotenv
+from storage_factory import get_storage
+load_dotenv()
 
-# --- KONFIGURATION ---
-DB_FILE = "konten.json"
 
 # --- PERSISTENZ (JSON) ---
 
@@ -37,10 +38,10 @@ def filtere_konten(konten_liste, suchbegriff):
     begriff_bereinigt = suchbegriff.strip().lower()
     return [k for k in konten_liste if begriff_bereinigt in k.inhaber.lower()]
 
-def interaktives_menue(konten_liste):
+def interaktives_menue():
     """Startet die Benutzerschnittstelle für die Kontoverwaltung."""
     while True:
-        print("\n--- 🏦 BANK-MANAGEMENT-SYSTEM (JSON) ---")
+        print(f"\n--- 🏦 BANK-MANAGEMENT-SYSTEM ({storage_type}) ---")
         print("1. Kontenübersicht anzeigen")
         print("2. Einzahlen")
         print("3. Abheben")
@@ -53,12 +54,13 @@ def interaktives_menue(konten_liste):
         wahl = input("\nWählen Sie eine Option (1-8): ")
 
         if wahl == "1":
-            if not konten_liste:
-                print("\nKeine Konten vorhanden.")
-            else:
+            aktuelle_daten = storage.laden()
+            if aktuelle_daten:
                 print("\nAktuelle Konten:")
-                for k in konten_liste:
+                for k in aktuelle_daten:
                     print(k)
+            else:
+                print("\nKeine Konten vorhanden.")
         
         elif wahl == "2":
             k = None
@@ -75,8 +77,7 @@ def interaktives_menue(konten_liste):
                 try:
                     betrag = float(input(f"Betrag für {k.inhaber} einzahlen: "))   
                     ergebnis = k.einzahlen(betrag)    
-
-                    storage.speichern(konten)        
+                    storage.update_kontostand(k)
                     print(f"✅  {ergebnis}")
                 except ValueError as e:
                     print(f"❌  {e}")
@@ -98,6 +99,7 @@ def interaktives_menue(konten_liste):
                 try:
                     betrag = float(input(f"Betrag von {k.inhaber} abheben: "))
                     print(f"✅  {k.abheben(betrag)}")
+                    storage.update_kontostand(k)
                 except ValueError as e:
                     print(f"❌  {e}")
                 except Exception as e:
@@ -105,7 +107,8 @@ def interaktives_menue(konten_liste):
         
         elif wahl == "4":
             begriff = input("\n🔍 Filtern nach Name: ")
-            treffer = filtere_konten(konten, begriff) # Logik aufrufen
+            aktuelle_daten = storage.laden()
+            treffer = filtere_konten(aktuelle_daten, begriff) # Logik aufrufen
             
             if not treffer:
                 print(f"⚠️  Keine Konten gefunden für: '{begriff}'")
@@ -139,7 +142,6 @@ def interaktives_menue(konten_liste):
                         zins = float(input("Zinssatz (%): "))
                         neues_k = Sparkonto(name, start_saldo, zins)
                     storage.konto_hinzufuegen(neues_k)
-                    konten_liste.append(neues_k)
                     print(f"✅  Konto für {name} erfolgreich angelegt!")
                 except ValueError as e:
                     print(f"❌ {e}")
@@ -162,6 +164,7 @@ def interaktives_menue(konten_liste):
                 try:
                     if hasattr(k, 'zinsen_berechnen'):                    
                         print(f"✅  {k.zinsen_berechnen()}")
+                        storage.update_kontostand(k)
                     else:
                         print(f"⚠️   Achtung: Konto '{name}' ist kein Sparkonto.")
                 except ValueError as e:
@@ -194,20 +197,39 @@ def interaktives_menue(konten_liste):
 
         elif wahl == "8":
             try:
-                storage.speichern(konten_liste)
-                print(f"✅  Daten erfolgreich in '{DB_FILE}' gesichert. Auf Wiedersehen!")
+                aktuelle_daten = storage.laden() 
+                storage.speichern(aktuelle_daten)
+                print(f"✅  System erfolgreich synchronisiert. Auf Wiedersehen!")
             except Exception as e:
                 print(f"❌  Kritischer Fehler beim Beenden: {e}")
             break
         else:
             print("⚠️  Ungültige Eingabe, bitte versuchen Sie es erneut.")
 
-
+storage_type = ""
 # --- HAUPTPROGRAMM ---
 if __name__ == "__main__":
     logger.info(f"Programm gestartet")
-    storage = JSONStorage("konten.json")
-
+    print("\n" + "="*40)
+    print("      🏦 NODREX BANK-MANAGEMENT")
+    print("="*40)
+    print("Wählen Sie den Speicher-Modus:")
+    print(" [1] JSON-Datei (Lokal/Einfach)")
+    print(" [2] SQLite-Datenbank (Professionell/Relational)")
+    print(" [Enter] Standard aus .env nutzen")
+    
+    wahl = input("\nAuswahl > ").strip()
+    
+    if wahl == "1":
+        storage_type = "json"
+        storage = get_storage("json")
+    elif wahl == "2":
+        storage_type = "sql"
+        storage = get_storage("sql")
+    else:
+        storage_type = os.getenv("STORAGE_TYPE", "json").lower()
+        storage = get_storage()
+        
     try:
         konten = storage.laden()
 
@@ -223,4 +245,4 @@ if __name__ == "__main__":
         print(f"❌ Kritischer Fehler beim Beenden: {e}")
         exit()
 
-    interaktives_menue(konten)
+    interaktives_menue()
